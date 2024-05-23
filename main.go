@@ -8,14 +8,14 @@ import (
 
 func main() {
 	nums := []int{3, 1, 5, 8}
-	maxCoins := maxCoinsSolution1(nums)
+	maxCoins := maxCoinsSolution2(nums)
 	fmt.Println("max coins of", nums, "is", maxCoins)
 }
 
 func dpSolution1(nums []int, memo *map[string]int) int {
 	numsInString := convertSliceToString(nums)
-	if _, ok := (*memo)[numsInString]; ok {
-		return (*memo)[numsInString]
+	if v, ok := (*memo)[numsInString]; ok {
+		return v
 	}
 
 	if len(nums) == 2 {
@@ -60,4 +60,37 @@ func maxInt(num1, num2 int) int {
 	} else {
 		return num2
 	}
+}
+
+func maxCoinsSolution2(nums []int) int {
+	var modifiedNums []int
+	modifiedNums = append(modifiedNums, append(append([]int{1}, nums...), 1)...)
+	memo := make([][]int, len(nums)+2)
+	for i := range memo {
+		memo[i] = make([]int, len(nums)+2)
+	}
+
+	return dpSolution2(1, len(modifiedNums)-2, &modifiedNums, &memo)
+}
+
+func dpSolution2(left, right int, nums *[]int, memo *[][]int) int {
+	if v := (*memo)[left][right]; v > 0 {
+		return v
+	}
+
+	if right-left < 0 {
+		return 0
+	}
+
+	maxCoins := 0
+	for i := left; i <= right; i++ {
+		// nums[i] is the last burst one
+		gain := (*nums)[left-1] * (*nums)[i] * (*nums)[right+1]
+		// nums[i] is fixed, recursively call left side and right side
+		remaining := dpSolution2(left, i-1, nums, memo) + dpSolution2(i+1, right, nums, memo)
+		maxCoins = max(maxCoins, gain+remaining)
+	}
+
+	(*memo)[left][right] = maxCoins
+	return maxCoins
 }
